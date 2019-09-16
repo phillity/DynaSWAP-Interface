@@ -1,6 +1,8 @@
 """  DynaSwapApp/models.py  """
 from django.db import models
 from django.urls import reverse
+import hashlib
+from hashlib import md5
 
 
 class Roles(models.Model):
@@ -12,13 +14,7 @@ class Roles(models.Model):
     uuid = models.CharField(max_length=38)
     url = models.URLField(max_length=255)
     role_key = models.CharField(max_length=40)
-    # Adding second key for now because this is needed for hierarchy.py. May need to be manually added to database
-    # Increasing length for second key for now. Based on the current hash function more than 40 chars is needed but this is subject to change in the future
-    role_second_key = models.CharField(max_length=100)
     feature = models.BinaryField()
-    # big_prime = models.IntegerField(max_length=128)
-    # random_num = models.IntegerField(max_length=128)
-
 
     def __str__(self):
         return self.role
@@ -32,7 +28,6 @@ class Users(models.Model):
         db_table = 'users'
     user_id = models.IntegerField(max_length=11, unique=True, primary_key=True)
     username = models.CharField(max_length=50, unique=True)
-    # SID = models.IntegerField(max_length=128)
     password = models.CharField(max_length=50)
     
     def get_SID(self):
@@ -67,10 +62,11 @@ class UsersRoles(models.Model):
 class RoleEdges(models.Model):
     """  openMRS Role_Role class """
     class Meta:
-        db_table = "role_roletesttwo"
-    parent_role = models.ForeignKey(Roles, db_column='parent_role', related_name="+", on_delete=models.DO_NOTHING)
-    child_role = models.ForeignKey(Roles, db_column='child_role', related_name="+", on_delete=models.DO_NOTHING)
+        db_table = "role_role"
+    parent_role = models.ForeignKey(Roles, db_column='parent_role', on_delete=models.CASCADE)
+    child_role = models.ForeignKey(Roles, db_column='child_role', on_delete=models.CASCADE)
     # Making the length longer for now
+    edge_secret = models.CharField(max_length=40)
     edge_key = models.CharField(max_length=100)
 
     def __str__(self):

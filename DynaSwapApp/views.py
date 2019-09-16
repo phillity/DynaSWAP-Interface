@@ -19,7 +19,7 @@ from django.views.generic import TemplateView, View, CreateView
 from django.core.files.base import ContentFile
 from DynaSwapApp.models import Roles, Users, UsersRoles, DynaSwapUsers, RoleEdges
 from DynaSwapApp.services.register import Register
-from DynaSwapApp.services.DAG import Node, Edge, DAG
+from DynaSwapApp.services.dag import Node, Edge, DAG
 from DynaSwapApp.services.authenticate import Authenticate
 from django.utils import timezone
 from django.urls import reverse_lazy
@@ -327,7 +327,7 @@ class AddRoleView(CreateView):
     def form_valid(self, form):
         self.object = form.save()
         graph = DAG()
-        graph.add_role(self.object.role, self.object.description)
+        graph.add_node(self.object.role, self.object.description)
         return HttpResponseRedirect(self.get_success_url())
 
 

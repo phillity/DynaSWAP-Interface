@@ -2,7 +2,7 @@ from DynaSwapApp.models import Roles, RoleEdges, Users, UsersRoles
 import os
 import hashlib
 from hashlib import md5
-from acp import ACP
+from DynaSwapApp.services.acp import ACP
 from atallah import hash_fun, encrypt, decrypt
 
 
@@ -83,21 +83,21 @@ class Node:
 
 
 class Edge:
-    def __init__(self, t_i, l_j, t_j, k_j):
+    def __init__(self, r_ij, y_ij):
         """
         Constructor for edge. Given the parent derive key, child label, child
         derive key and child decrypt key the edge will calculate the edge seed
         and the edge label.
         Args:
-            t_i (string): hex string of parent derive key
-            l_j (string): hex string of child label
-            t_j (string): hex string of child dervive key
-            k_j (string): hex string of child decrypt key
+            r_ij (string): hex string of edge secret
+            y_ij (string): hex string of edge public key
         Returns:
             N/A
         """
-        self.__r_ij = hash_fun(t_i, l_j)
-        self.y_ij = encrypt(self.__r_ij, t_j, k_j)
+        self.__r_ij = r_ij
+        self.y_ij = y_ij
+        # self.__r_ij = hash_fun(t_i, l_j)
+        # self.y_ij = encrypt(self.__r_ij, t_j, k_j)
 
     def update_r_ij(self, t_i, l_j):
         """
@@ -137,7 +137,7 @@ class DAG:
         for edges in RoleEdges.objects.all():
             paren = self.node_list[edges.parent_role.role]
             child = self.node_list[edges.child_role.role]
-            self.node_list[paren.role].edges[child.role] = Edge(paren.get_t_i(), child.l_i, child.get_t_i(), child.get_k_i())
+            self.node_list[paren.role].edges[child.role] = Edge(edges.edge_secret, edges.edge_key)
 
     def add_node(self, name, desc):
         """
@@ -174,13 +174,14 @@ class DAG:
 
         paren_obj = Roles.objects.get(role=paren_node)
         child_obj = Roles.objects.get(role=child_node)
-
-        new_edge = Edge(
-            paren.get_t_i(), child.l_i, child.get_t_i(), child.get_k_i())
+        r_ij = hash_fun(paren.get_t_i(), child.l_i)
+        y_ij = encrypt(r_ij, child.get_t_i(), child.get_k_i())
+        new_edge = Edge(r_ij, y_ij)
         self.node_list[paren_node].edges[child_node] = new_edge
 
         if not self.is_cyclic():
-            RoleEdges(parent_role=paren_obj, child_role=child_obj).save()
+            RoleEdges(parent_role=paren_obj, child_role=child_obj, 
+            edge_secret=r_ij, edge_key=y_ij).save()
         else:
             self.node_list[paren_node].edges.pop(child_node)
             return False
@@ -316,8 +317,10 @@ class DAG:
                     self.node_list[node].get_t_i(),
                     self.node_list[node].get_k_i())
                 paren = Roles.objects.get(role=pred)
-                    child = Roles.objects.get(role=node)
-                    #RoleEdges.objects.filter(parent_role=paren, child_role=child).update(edge_key=)
+                child = Roles.objects.get(role=node)
+                RoleEdges.objects.filter(parent_role=paren, child_role=child).update(
+                    edge_secret=self.node_list[pred].edges[node].__r_ij,
+                    edge_key=self.node_list[pred].edges[node].y_ij)
 
         self.node_list[parent_node].edges.pop(child_node)
         paren = Roles.objects.get(role=parent_node)
@@ -361,7 +364,9 @@ class DAG:
                 self.node_list[node].get_t_i(), self.node_list[node].get_k_i())
             paren = Roles.objects.get(role=pred)
             child = Roles.objects.get(role=node)
-            #RoleEdges.objects.filter(parent_role=paren, child_role=child).update(edge_key=)
+            RoleEdges.objects.filter(parent_role=paren, child_role=child).update(
+                edge_secret=self.node_list[pred].edges[node].__r_ij, 
+                edge_key=self.node_list[pred].edges[node].y_ij)
 
         # for edges from this role, change edge keys
         for children in self.node_list[node].edges.keys():
@@ -372,7 +377,9 @@ class DAG:
                 self.node_list[children].get_k_i())
             paren = Roles.objects.get(role=node)
             child = Roles.objects.get(role=children)
-            #RoleEdges.objects.filter(parent_role=parent, child_role=child).update(edge_key=)
+            RoleEdges.objects.filter(parent_role=parent, child_role=child).update(
+                edge_secret=self.node_list[node].edges[children].__r_ij, 
+                edge_key=self.node_list[node].edges[children].y_ij)
         
         #ACP operation here
 
