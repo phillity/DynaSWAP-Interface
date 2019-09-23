@@ -3,7 +3,7 @@ import os
 import hashlib
 from hashlib import md5
 from DynaSwapApp.services.acp import ACP
-from atallah import hash_fun, encrypt, decrypt
+from DynaSwapApp.services.atallah import hash_fun, encrypt, decrypt
 
 
 """
@@ -35,7 +35,7 @@ class Node:
         self.name = name
         self.l_i = l_i
         self.__s_i = s_i
-        self.acp = ACP(name, self.__s_i)
+        # self.acp = ACP(name, self.__s_i)
         self.edges = {}
 
     def update_secret(self):
@@ -47,7 +47,7 @@ class Node:
             N/A
         """
         self.__s_i = md5(os.urandom(16)).hexdigest()
-        self.acp = ACP(self.name, self.__s_i)
+        # self.acp = ACP(self.name, self.__s_i)
         Roles.objects.get(role=self.name).update(role_key=self.__s_i)
 
     def update_label(self):
@@ -59,7 +59,7 @@ class Node:
             N/A
         """
         self.l_i = hashlib.md5(os.urandom(16)).hexdigest()
-        Roles.objects.get(role=self.name).update(uuid=self.l_i)
+        Roles.objects.filter(role=self.name).update(uuid=self.l_i)
 
     def get_t_i(self):
         """
@@ -120,7 +120,9 @@ class Edge:
             N/A
         """
         self.y_ij = encrypt(self.__r_ij, t_j, k_j)
-
+    
+    def get_r_ij(self):
+        return self.__r_ij
 
 class DAG:
     def __init__(self):
@@ -137,7 +139,7 @@ class DAG:
         for edges in RoleEdges.objects.all():
             paren = self.node_list[edges.parent_role.role]
             child = self.node_list[edges.child_role.role]
-            self.node_list[paren.role].edges[child.role] = Edge(edges.edge_secret, edges.edge_key)
+            paren.edges[child.name] = Edge(edges.edge_secret, edges.edge_key)
 
     def add_node(self, name, desc):
         """
@@ -149,9 +151,12 @@ class DAG:
             N/A
         """
         if name not in self.node_list.keys():
-            new_node = Node(name, desc)
+            new_sec = md5(os.urandom(16))
+            new_lab = md5(os.urandom(16))
+            new_node = Node(name, new_sec, new_lab)
             self.node_list[name] = new_node
-        Roles(role=name, description=desc, uuid=new_node.l_i, role_key=new_node.__s_i).save()
+            Roles(role=name, description=desc, 
+            uuid=new_lab, role_key=new_sec).save()
 
     def add_edge(self, paren_node, child_node):
         """
@@ -319,7 +324,7 @@ class DAG:
                 paren = Roles.objects.get(role=pred)
                 child = Roles.objects.get(role=node)
                 RoleEdges.objects.filter(parent_role=paren, child_role=child).update(
-                    edge_secret=self.node_list[pred].edges[node].__r_ij,
+                    edge_secret=self.node_list[pred].edges[node].get_r_ij(),
                     edge_key=self.node_list[pred].edges[node].y_ij)
 
         self.node_list[parent_node].edges.pop(child_node)

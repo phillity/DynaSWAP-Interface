@@ -2,9 +2,9 @@ import os
 import numpy as np
 from itertools import combinations
 from hashlib import md5
-import crypto
+import Crypto
 from Crypto.Util import number
-from DynaSwapApp.models import Roles, User, UsersRoles
+from DynaSwapApp.models import Roles, Users, UsersRoles
 
 
 """
@@ -16,7 +16,7 @@ https://ieeexplore.ieee.org/document/4509697
 
 
 class ACP:
-    def _init_(self, node, secret):
+    def __init__(self, node, secret):
         """
         Constructor for ACP.
         Args:

@@ -9,7 +9,7 @@ class allRoles(forms.Form):
         roleList.append([role.role, role.role])
 
     allRoleChoices = forms.ChoiceField(choices=roleList)
-    # DatabaseType=forms.ChoiceField(choices=[('sqlserver','SQLServer'),('oracle','Oracle')])
+
 
 class allEdges(forms.Form):
 
