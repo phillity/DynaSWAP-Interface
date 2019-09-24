@@ -150,13 +150,11 @@ class DAG:
         Returns:
             N/A
         """
-        if name not in self.node_list.keys():
-            new_sec = md5(os.urandom(16)).hexdigest()
-            new_lab = md5(os.urandom(16)).hexdigest()
-            new_node = Node(name, new_lab, new_sec)
-            self.node_list[name] = new_node
-            Roles(role=name, description=desc,
-            uuid=new_lab, role_key=new_sec).save()
+        new_sec = md5(os.urandom(16)).hexdigest()
+        new_lab = md5(os.urandom(16)).hexdigest()
+        new_node = Node(name, new_lab, new_sec)
+        self.node_list[name] = new_node
+        Roles.objects.filter(role=name).update(uuid=new_lab, role_key=new_sec)
 
     def add_edge(self, paren_node, child_node):
         """
