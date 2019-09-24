@@ -31,8 +31,8 @@ class ACP:
         self.coefficients = []
 
         # Make sure key value is smaller than prime used for modulo
-        while int(self.__K, 16) >= int(self.q, 16):
-            self.q = hex(number.getRandomInteger(128))
+        while int(secret, 16) >= int(self.q, 16):
+            self.q = hex(number.getPrime(128))
 
     def get_coefficients(self):
         """

@@ -35,7 +35,7 @@ class Node:
         self.name = name
         self.l_i = l_i
         self.__s_i = s_i
-        # self.acp = ACP(name, self.__s_i)
+        # self.acp = ACP(name, s_i)
         self.edges = {}
 
     def update_secret(self):
@@ -151,11 +151,11 @@ class DAG:
             N/A
         """
         if name not in self.node_list.keys():
-            new_sec = md5(os.urandom(16))
-            new_lab = md5(os.urandom(16))
-            new_node = Node(name, new_sec, new_lab)
+            new_sec = md5(os.urandom(16)).hexdigest()
+            new_lab = md5(os.urandom(16)).hexdigest()
+            new_node = Node(name, new_lab, new_sec)
             self.node_list[name] = new_node
-            Roles(role=name, description=desc, 
+            Roles(role=name, description=desc,
             uuid=new_lab, role_key=new_sec).save()
 
     def add_edge(self, paren_node, child_node):

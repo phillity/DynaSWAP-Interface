@@ -8,6 +8,7 @@ from django.shortcuts import render, render_to_response
 from django.views.generic import TemplateView, View, CreateView
 from DynaSwapApp.models import Roles, Users, UsersRoles, RoleEdges
 from DynaSwapApp.services.dag import Node, Edge, DAG
+from DynaSwapApp.services.acp import ACP
 from django.urls import reverse_lazy
 
 
@@ -88,8 +89,10 @@ class AddRoleView(CreateView):
     
     def form_valid(self, form):
         self.object = form.save()
+        name = self.object.role
+        desc = self.object.description
         graph = DAG()
-        graph.add_node(self.object.role, self.object.description)
+        graph.add_node(name, desc)
         return HttpResponseRedirect(self.get_success_url())
 
 

@@ -11,8 +11,8 @@ class Roles(models.Model):
         db_table = 'role'
     role = models.CharField(max_length=50, unique=True, primary_key=True)
     description = models.CharField(max_length=255)
-    uuid = models.CharField(max_length=38)
-    role_key = models.CharField(max_length=40)
+    uuid = models.CharField(max_length=100)
+    role_key = models.CharField(max_length=100)
 
     def __str__(self):
         return self.role
@@ -48,8 +48,8 @@ class RoleEdges(models.Model):
     """  openMRS Role_Role class """
     class Meta:
         db_table = "role_roletesttwo"
-    parent_role = models.ForeignKey(Roles, related_name='paren_edge', db_column='parent_role', on_delete=models.CASCADE)
-    child_role = models.ForeignKey(Roles, related_name='child_edge', db_column='child_role', on_delete=models.CASCADE)
+    parent_role = models.ForeignKey(Roles, related_name='paren_edge', db_column='parent_role', on_delete=models.DO_NOTHING)
+    child_role = models.ForeignKey(Roles, related_name='child_edge', db_column='child_role', on_delete=models.DO_NOTHING)
     # Making the length longer for now
     edge_secret = models.CharField(max_length=40)
     edge_key = models.CharField(max_length=100)
