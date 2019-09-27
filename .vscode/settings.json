@@ -1,0 +1,10 @@
+{
+    "python.pythonPath": "D:\\Anaconda\\envs\\myevn\\python.exe",
+    "python.linting.pylintEnabled": false,
+    "python.linting.pep8Enabled": true,
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+}
